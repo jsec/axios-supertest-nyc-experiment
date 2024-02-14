@@ -8,8 +8,8 @@ router.get('/add', (_, res) => {
   })
 })
 
-router.get('/subtract', (_, res) => {
-  const response = subtract(5, 2)
+router.get('/subtract', async (_, res) => {
+  const response = await subtract(5, 2)
   res.json({
     res: response
   })
