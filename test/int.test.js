@@ -1,5 +1,5 @@
 const server = require('../src/server')()
-const request = require('supertest')
+const axios = require('axios')
 const nock = require('nock')
 const waitOn = require("wait-on")
 
@@ -17,7 +17,7 @@ afterAll(() => {
   app.close()
 })
 
-const agent = request.agent('http://localhost:3033')
+const BASE_URL = 'http://localhost:3033'
 
 const scope = nock('https://jsonplaceholder.typicode.com')
   .get('/todos/1')
@@ -25,14 +25,26 @@ const scope = nock('https://jsonplaceholder.typicode.com')
     meep: 'moop'
   })
 
+describe('/todo', () => {
+  it('should return the intercepted value', async () => {
+    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/todo')
+
+    expect(status).toEqual(200)
+    expect(statusText).toEqual('OK')
+    expect(headers['content-type']).toMatch(/json/)
+    expect(body).toStrictEqual({
+      meep: 'moop'
+    })
+  })
+})
+
 describe('/calc/add', () => {
   it('should return 5, because 2 + 3 = 5', async () => {
-    // sleep for 10 seconds to prove that the service is running in a different process
+    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/add')
 
-    const { statusCode, type, body } = await agent.get('/calc/add')
-
-    expect(statusCode).toEqual(200)
-    expect(type).toMatch(/json/)
+    expect(status).toEqual(200)
+    expect(statusText).toEqual('OK')
+    expect(headers['content-type']).toMatch(/json/)
     expect(body).toStrictEqual({
       res: 5
     })
@@ -41,10 +53,11 @@ describe('/calc/add', () => {
 
 describe('/calc/subtract', () => {
   it('shuld return 3, because 5 -2 = 3', async () => {
-    const { statusCode, type, body } = await agent.get('/calc/subtract')
+    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/subtract')
 
-    expect(statusCode).toEqual(200)
-    expect(type).toMatch(/json/)
+    expect(status).toEqual(200)
+    expect(statusText).toMatch('OK')
+    expect(headers['content-type']).toMatch(/json/)
     expect(body).toStrictEqual({
       res: 3
     })
