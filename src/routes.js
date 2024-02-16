@@ -1,7 +1,8 @@
 const router = require('express').Router()
 
-const { add, subtract } = require('./calc')
-const { getTodo } = require('./external')
+const { add, subtract } = require('./lib/calc')
+const { getTodo } = require('./lib/external')
+
 
 router.get('/add', (_, res) => {
   const response = add(2, 3)
@@ -18,7 +19,8 @@ router.get('/subtract', async (_, res) => {
   })
 })
 
-router.get('/todo', async (_, res) => {
+router.get('/todo', async (req, res) => {
+  console.log(req.token)
   const response = await getTodo()
   res.json(response)
 })

@@ -1,8 +1,11 @@
 const createServer = require('./src/server')
 
-const port = 3333
+require('dotenv').config()
+console.log(process.env)
+
+const PORT = process.env.PORT || 3033
 
 const app = createServer()
-app.listen(port, () => {
-  console.log(`Server running on port ${port}...`)
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}...`)
 })

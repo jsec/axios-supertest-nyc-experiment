@@ -1,9 +1,25 @@
+const mockVerifyFn = jest.fn()
 const server = require('../src/server')()
 const axios = require('axios')
 const nock = require('nock')
 const waitOn = require("wait-on")
+require('dotenv').config()
+
+jest.mock('@okta/jwt-verifier', () => {
+  return jest.fn().mockImplementation(() => {
+    return {
+      verifyAccessToken: mockVerifyFn
+    }
+  })
+})
 
 let app
+
+const options = {
+  headers: {
+    'Authorization': `Bearer ${process.env.ACCESS_TOKEN}`
+  }
+}
 
 beforeAll(async () => {
   app = server.listen(3033, () => {
@@ -17,7 +33,7 @@ afterAll(() => {
   app.close()
 })
 
-const BASE_URL = 'http://localhost:3033'
+const BASE_URL = process.env.BASE_URL
 
 const scope = nock('https://jsonplaceholder.typicode.com')
   .get('/todos/1')
@@ -26,8 +42,17 @@ const scope = nock('https://jsonplaceholder.typicode.com')
   })
 
 describe('/todo', () => {
+  mockVerifyFn.mockReturnValue({
+    claims: {
+      roles: [
+        'Super Duper Admin',
+        'Eater of Donuts'
+      ]
+    }
+  })
+
   it('should return the intercepted value', async () => {
-    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/todo')
+    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/todo', options)
 
     expect(status).toEqual(200)
     expect(statusText).toEqual('OK')
@@ -40,7 +65,15 @@ describe('/todo', () => {
 
 describe('/calc/add', () => {
   it('should return 5, because 2 + 3 = 5', async () => {
-    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/add')
+    mockVerifyFn.mockReturnValue({
+      claims: {
+        roles: [
+          'really good guy'
+        ]
+      }
+    })
+
+    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/add', options)
 
     expect(status).toEqual(200)
     expect(statusText).toEqual('OK')
@@ -53,7 +86,15 @@ describe('/calc/add', () => {
 
 describe('/calc/subtract', () => {
   it('shuld return 3, because 5 -2 = 3', async () => {
-    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/subtract')
+    mockVerifyFn.mockReturnValue({
+      claims: {
+        roles: [
+          'really good guy'
+        ]
+      }
+    })
+
+    const { status, statusText, headers, data: body } = await axios.get(BASE_URL + '/api/subtract', options)
 
     expect(status).toEqual(200)
     expect(statusText).toMatch('OK')
